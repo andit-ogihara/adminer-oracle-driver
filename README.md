@@ -12,20 +12,12 @@ adminer-folder/
  - adminer.php
  - index.php
  - plugins/
-     - plugin.php
      - drivers/
          - oracle.inc.php
 ```
 
 Example of index.php:
 ```php
-function adminer_object() {
-    include_once "./plugins/drivers/oracle.inc.php";
-
-    // required to run any plugin
-    include_once "./plugins/plugin.php";
-    
-    return new AdminerPlugin($plugins);
-}
+include_once "./plugins/drivers/oracle.inc.php";
 // include original Adminer or Adminer Editor
 include "./adminer.php";
