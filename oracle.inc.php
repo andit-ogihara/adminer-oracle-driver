@@ -4,6 +4,14 @@ add_driver("oracle2", "Oracle2");
 if (isset($_GET["oracle2"])) {
 	define("DRIVER", "oracle2");
 	define("DUMMY_DATABASE", "not_supported");
+    global $oracle_init_sqls;
+    $oracle_init_sqls = array(
+        "ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY/MM/DD HH24:MI:SS'",
+        "ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY/MM/DD HH24:MI:SSXFF9'",
+        "ALTER SESSION SET NLS_TIME_FORMAT = 'HH24:MI:SSXFF9'",
+        "ALTER SESSION SET NLS_TIMESTAMP_TZ_FORMAT = 'YYYY/MM/DD HH24:MI:SSXFF9 TZR'",
+        "ALTER SESSION SET NLS_DATE_LANGUAGE = 'JAPANESE'",
+    );
 	if (extension_loaded("oci8")) {
 		class Min_DB {
 			var $extension = "oci8", $_link, $_result, $server_info, $affected_rows, $errno, $error;
@@ -27,13 +35,17 @@ if (isset($_GET["oracle2"])) {
 
 			function connect($server, $username, $password) {
 				$this->_link = @oci_new_connect($username, $password, $server, "AL32UTF8");
-				if ($this->_link) {
-					$this->server_info = oci_server_version($this->_link);
-					return true;
+				if (!$this->_link) {
+                    $error = oci_error();
+                    $this->error = $error["message"];
+                    return false;
 				}
-				$error = oci_error();
-				$this->error = $error["message"];
-				return false;
+                $this->server_info = oci_server_version($this->_link);
+                global $oracle_init_sqls;
+                foreach ($oracle_init_sqls as $sql) {
+                    $this->query($sql);
+                }
+                return true;
 			}
 
 			function quote($string) {
@@ -132,6 +144,10 @@ if (isset($_GET["oracle2"])) {
 
 			function connect($server, $username, $password) {
 				$this->dsn("oci:dbname=//$server;charset=AL32UTF8", $username, $password);
+                global $oracle_init_sqls;
+                foreach ($oracle_init_sqls as $sql) {
+                    $this->query($sql);
+                }
 				return true;
 			}
 
